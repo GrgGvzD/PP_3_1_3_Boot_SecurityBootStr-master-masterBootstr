@@ -337,10 +337,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+
+
 </head>
 <body>
 <div id="user-list">
+    <button id="logoutButton">Logout</button>
     <h2>All Users</h2>
+    <button id="createButton" class="btn btn-primary">Create</button>
+
+
     <table id="user-table">
         <thead>
         <tr>
@@ -349,6 +359,8 @@
             <th>Last Name</th>
             <th>Username</th>
             <th>Roles</th>
+            <th>Update</th>
+            <th>Delete</th>
         </tr>
         </thead>
         <tbody id="user-table-body">
@@ -356,8 +368,168 @@
         </tbody>
     </table>
 </div>
+<!-- Модальное окно -->
+<div class="modal" tabindex="-1" id="createUserModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createUserForm">
+                    <div class="mb-3">
+                        <label for="firstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="firstName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="lastName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="userName" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="userName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="roles" class="form-label">Roles</label>
+                        <select id="roles" class="form-select" multiple required>
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="USER">USER</option>
+                        </select>
+
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Модальное окно -->
+<div class="modal fade" id="editUserModal" tabindex="-1" role="dialog" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                <button id="X_btn" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <div class="form-group">
+                        <label for="editId">ID</label>
+                        <input type="text" class="form-control" id="editId" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="editFirstName">First Name</label>
+                        <input type="text" class="form-control" id="editFirstName">
+                    </div>
+                    <div class="form-group">
+                        <label for="editLastName">Last Name</label>
+                        <input type="text" class="form-control" id="editLastName">
+                    </div>
+                    <div class="form-group">
+                        <label for="editUsername">Username</label>
+                        <input type="text" class="form-control" id="editUsername">
+                    </div>
+                    <div class="form-group">
+                        <label for="editPassword">Password</label>
+                        <input type="password" class="form-control" id="editPassword">
+                    </div>
+                    <div class="form-group">
+                        <label for="editRoles">Roles</label>
+                        <select id="editRoles" class="form-select" multiple required>
+                            <option value="ADMIN">ADMIN</option>
+                            <option value="USER">USER</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveChangesBtn">Save changes</button>
+                <button type="button" id="close_btn" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
 <script>
+
+    // Функция, которая будет вызываться при нажатии на кнопку обновления
+    function openEditModal(userId) {
+        // Получаем данные о пользователе по его ID (нужно реализовать эту функцию)
+        var userData = getUserDataById(userId);
+
+        // Заполняем форму данными пользователя
+        $('#editId').val(userData.id);
+        $('#editFirstName').val(userData.firstName);
+        $('#editLastName').val(userData.lastName);
+        $('#editUsername').val(userData.userName);
+        $('#editPassword').val(""); // Очищаем пароль для безопасности
+        $('#editRoles').val(userData.roles.join(", ")); // Преобразуем массив ролей в строку и выводим в поле формы
+
+        // Открываем модальное окно
+        $('#editUserModal').modal('show');
+    }
+
+
+    function getUserDataById(userId) {
+        var userData;
+
+        // Выполняем GET запрос на сервер
+        $.ajax({
+            url: '/api/admin/users/' + userId,
+            type: 'GET',
+            async: false, // Устанавливаем асинхронность в false, чтобы функция вернула данные сразу после получения ответа от сервера
+            success: function(response) {
+                // Записываем данные о пользователе
+                userData = response;
+            },
+            error: function(xhr, status, error) {
+                // Обрабатываем ошибку
+                console.error(error);
+            }
+        });
+
+        return userData;
+    }
+
+
+    function deleteUserById(userId) {
+        var userData;
+
+        // Выполняем GET запрос на сервер
+        $.ajax({
+            url: '/api/admin/users/' + userId,
+            type: 'DELETE',
+            async: false, // Устанавливаем асинхронность в false, чтобы функция вернула данные сразу после получения ответа от сервера
+            success: function(response) {
+                // Записываем данные о пользователе
+                userData = response;
+                location.reload();
+            },
+            error: function(xhr, status, error) {
+                // Обрабатываем ошибку
+                console.error(error);
+            }
+        });
+
+        return userData;
+    }
+
+
+
+
+
     $(document).ready(function() {
         // Fetch all users via AJAX
         $.ajax({
@@ -379,6 +551,8 @@
                         "<td>" + user.lastName + "</td>" +
                         "<td>" + user.userName + "</td>" +
                         "<td>" + roles + "</td>" +
+                        "<td><button id='edit' class='btn btn-primary update-user'  data-id='" + user.id + "'>Обновить</button></td>" +
+                        "<td><button id='deleteBtn' class='btn btn-danger update-user'  data-id='" + user.id + "'>Удалить</button></td>" +
                         "</tr>";
                     tableBody.append(row);
                 });
@@ -388,7 +562,22 @@
                 $("#user-list").append("<p>Error fetching user list: " + error + "</p>");
             }
         });
+
+        $('#user-table-body').on('click', '#edit', function() {
+            // Получаем ID пользователя из атрибута data-id кнопки
+            var userId = $(this).data('id');
+            // Вызываем функцию для открытия модального окна
+            openEditModal(userId);
+        });
+
+        $('#user-table-body').on('click', '#deleteBtn', function() {
+            // Получаем ID пользователя из атрибута data-id кнопки
+            var userId = $(this).data('id');
+            // Вызываем функцию для открытия модального окна
+            deleteUserById(userId);
+        });
     });
+
 </script>
 </body>
 </html>

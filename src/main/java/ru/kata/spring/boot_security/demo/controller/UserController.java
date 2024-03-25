@@ -1,7 +1,4 @@
 package ru.kata.spring.boot_security.demo.controller;
-
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,11 +27,6 @@ public class UserController {
         return convertToDto(user);
     }
 
-//    @GetMapping("login")
-//    public String showUserInfo(@AuthenticationPrincipal User user, Model model) {
-//        model.addAttribute("user", user);
-//        return "login";
-//    }
     private UserDto convertToDto(User user) {
         UserDto userDto = new UserDto();
         userDto.setId(user.getId());

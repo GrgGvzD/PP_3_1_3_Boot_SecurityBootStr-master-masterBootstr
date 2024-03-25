@@ -27,26 +27,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     public WebSecurityConfig(SuccessUserHandler successUserHandler, UserDetailsServiceImpl userService/*, PasswordEncoder passwordEncoder*/) {
         this.successUserHandler = successUserHandler;
         this.userService = userService;
-//        this.passwordEncoder = passwordEncoder;
     }
 
-//    @Override
-//    protected void configure(HttpSecurity http) throws Exception {
-//        http
-//                .csrf().disable()
-//                .authorizeRequests()
-//                .antMatchers("/admin", "/admin/**").hasAuthority("ADMIN")
-//                .antMatchers("/api/**").hasAuthority("ADMIN")
-//                .antMatchers("/user", "/user/**").hasAnyAuthority("ADMIN", "USER")
-//                .antMatchers("/login").permitAll()
-//                .anyRequest().authenticated()
-//                .and()
-//                .formLogin().successHandler(successUserHandler)///
-//                .permitAll()///
-//                .and()///
-//                .logout()
-//                .permitAll();
-//    }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
